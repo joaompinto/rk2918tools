@@ -4,6 +4,7 @@ from os.path import exists
 import sys
 import os
 import re
+import shutil
 
 class Partition:
 	def __init__(self, offset, size):
@@ -31,8 +32,9 @@ else:
 	print "On some systems this can be done with:"
 	print "    - Shutdown the device"
 	print "    - Press the volume '-' while plugging the USB cable"
+	sys.exit(2)
 
-if len(sys.argv) < 3 or sys.argv[1] not in 'dump':
+if len(sys.argv) < 3 or sys.argv[1] not in ["dump", "write"]:
 	print "Usage: %s " % sys.argv[0]
 	print "            dump misc|kernel|boot|recovery|system"
 	sys.exit(2)
@@ -40,19 +42,33 @@ if len(sys.argv) < 3 or sys.argv[1] not in 'dump':
 cmd = sys.argv[1]
 part_name = sys.argv[2]
 part_info = partition_info(device_info)
-if cmd == "dump":
+if cmd in ["dump", "write"]:
 	partition = part_info.get(part_name, None)
 	if partition is None:
 		print "%s not found, available partitions: %s" % (part_name, ','.join(part_info))
-		sys.exit(3)
+		
+		sys.exit(3)		
+if cmd == "dump":
+	if len(sys.argv) > 3:
+		filename = sys.argv[3]	
+	else:
+		filename = part_name+".img"
 	cmd = "./rkflashtool r %s %s > %s" % (partition.offset, partition.size, part_name+".img.tmp")
 	print "Executing", cmd
 	rc, output = getstatusoutput(cmd)
 	if rc != 0:
 		print "An error ocurred while reading image file"
-	else:
-		if exists(part_name+".img"):
-			os.unlink(part_name+".img")
-		os.rename(part_name+".img.tmp", part_name+".img")
+	else:		
+		if exists(filename):
+			os.unlink(filename)
+		shutil.move(part_name+".img.tmp", filename)
 		print "Image sucesffully dumped to", part_name+".img"
-	
+elif cmd == "write":
+	part_file = sys.argv[3]
+	cmd = "./rkflashtool w %s %s < %s" % (partition.offset, partition.size, part_file)
+	print "Executing", cmd
+	rc, output = getstatusoutput(cmd)
+	if rc != 0:
+		print "An error ocurred while writing image file"
+	else:
+		print "Image sucesffully writen."
