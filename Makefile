@@ -4,7 +4,8 @@ LDLIBS := -lusb-1.0  -lssl -lcrypto
 #CFLAGS := -DUSE_GCRYPT
 #LDLIBS := -lgcrypt
 
-TARGETS := rkcrc rkflashtool rkunpack rkafpack img_unpack img_maker afptool
+TARGETS := rkcrc rkflashtool rkunpack rkafpack img_unpack img_maker afptool\
+	to565
 
 all: ${TARGETS}
 
