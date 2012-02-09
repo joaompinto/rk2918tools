@@ -2,7 +2,7 @@
 import sys
 import os
 import magic
-from os.path import dirname, join, exists, split, splitext
+from os.path import dirname, join, exists, split ,splitext
 
 if len(sys.argv) != 2:
 	print "Usage: %s file.img" % sys.argv[0]

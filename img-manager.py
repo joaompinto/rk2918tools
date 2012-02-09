@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from commands import getoutput, getstatusoutput
-from os.path import exists, dirname, join
+from os.path import exists
 import sys
 import os
 import re
@@ -22,9 +22,7 @@ def partition_info(device_info):
 		partinfo[name]= Partition(offset, size)		
 	return partinfo
 
-base_dir = dirname(sys.argv[0])
-rkflash = join(base_dir, "rkflashtool")
-data = getoutput(rkflash+" r 0x0 0x400 2>/dev/null")
+data = getoutput("./rkflashtool r 0x0 0x400 2>/dev/null")
 device_info = data[:1024].strip('\x00')
 if device_info:
 	print "Device information:"
@@ -55,7 +53,7 @@ if cmd == "dump":
 		filename = sys.argv[3]	
 	else:
 		filename = part_name+".img"
-	cmd = rkflash+" r %s %s > %s" % (partition.offset, partition.size, part_name+".img.tmp")
+	cmd = "./rkflashtool r %s %s > %s" % (partition.offset, partition.size, part_name+".img.tmp")
 	print "Executing", cmd
 	rc, output = getstatusoutput(cmd)
 	if rc != 0:
@@ -67,7 +65,7 @@ if cmd == "dump":
 		print "Image sucesffully dumped to", part_name+".img"
 elif cmd == "write":
 	part_file = sys.argv[3]
-	cmd = rkflash+" w %s %s < %s" % (partition.offset, partition.size, part_file)
+	cmd = "./rkflashtool w %s %s < %s" % (partition.offset, partition.size, part_file)
 	print "Executing", cmd
 	rc, output = getstatusoutput(cmd)
 	if rc != 0:

@@ -34,8 +34,6 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <string.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <libusb-1.0/libusb.h>
 
 #define RKFLASHTOOL_VERSION     2
@@ -77,8 +75,8 @@ static void info_and_fatal(const int s, char *f, ...) {
 static void usage(void) {
     fatal("usage:\n"
           "\trkflashtool b                   \treboot device\n"
-          "\trkflashtool r offset size [filename]- \tread flash\n"
-          "\trkflashtool w offset size [filename]- \twrite flash\n\n"
+          "\trkflashtool r offset size >file \tread flash\n"
+          "\trkflashtool w offset size <file \twrite flash\n\n"
           "\toffset and size are in units of 512 bytes\n");
 }
 
@@ -109,8 +107,6 @@ int main(int argc, char **argv) {
     libusb_context *c;
     libusb_device_handle *h;
     int offset = 0, size = 0;
-    char *filename;
-    FILE *datafile = NULL;
     char action;
 
     NEXT; if (!argc) usage();
@@ -119,10 +115,9 @@ int main(int argc, char **argv) {
 
     switch(action) {
     case 'b':           if (argc   ) usage(); break;
-    case 'r': case 'w': if (argc < 2) usage();
+    case 'r': case 'w': if (argc!=2) usage();
         offset = strtoul(argv[0], NULL, 0);
         size   = strtoul(argv[1], NULL, 0);
-        filename = argv[2];
         break;
     default:
         usage();
@@ -156,45 +151,24 @@ int main(int argc, char **argv) {
         recv_res(h, 1);
         break;
     case 'r':
-		if(argc > 2) {
-			if((datafile = fopen(filename, "w")) == NULL) {		
-			 fprintf(stderr, "failed create file %s: %s\n", filename, 
-				strerror( errno ) );
-			 return -1;
-			}
-		}
         while (size>0) {
             info("reading flash memory at offset 0x%08x\n", offset);
 
             send_cmd(h, 2, 0x80, 0x000a1400, offset, RKFT_OFF_INCR);
             recv_buf(h, 1, RKFT_BLOCKSIZE);
             recv_res(h, 1);
-			if(datafile)
-				fwrite(buf, RKFT_BLOCKSIZE, 1, datafile);
-			else
-				write(1, buf, RKFT_BLOCKSIZE);
+
+            write(1, buf, RKFT_BLOCKSIZE);
             offset += RKFT_OFF_INCR;
             size   -= RKFT_OFF_INCR;
         }
-        if(datafile)
-			fclose(datafile);
         break;
     case 'w':
-		if(argc > 2) {
-			if((datafile = fopen(filename, "r")) == NULL) {		
-			 fprintf(stderr, "failed open file %s: %s\n", filename, 
-				strerror( errno ) );
-			 return -1;
-			}
-		}    
         while (size>0) {
             info("writing flash memory at offset 0x%08x\n", offset);
 
             memset(buf, 0, RKFT_BLOCKSIZE);
-            if(datafile)
-				fread(buf, RKFT_BLOCKSIZE, 1, datafile);
-            else
-				read(0, buf, RKFT_BLOCKSIZE);
+            read(0, buf, RKFT_BLOCKSIZE);
 
             send_cmd(h, 2, 0x80, 0x000a1500, offset, RKFT_OFF_INCR);
             send_buf(h, 2, RKFT_BLOCKSIZE);
@@ -203,8 +177,6 @@ int main(int argc, char **argv) {
             offset += RKFT_OFF_INCR;
             size   -= RKFT_OFF_INCR;
         }
-        if(datafile)
-			fclose(datafile);        
         break;
     default:
         break;
