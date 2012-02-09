@@ -15,7 +15,7 @@ if img_dir == "boot":
 	os.chdir("boot")
 	os.system('sudo find . ! -name "."|sort|sudo cpio -oa -H newc|gzip -n >../newinitrd.gz')
 	os.chdir("..")
-	os.system(join(base_dir, "rkcrc")+" newinitrd.gz boot.img")
+	os.system(join(base_dir, "rkcrc -k")+" newinitrd.gz boot.img")
 	print "Generated boot.img"
 
 
