@@ -1,4 +1,4 @@
-CFLAGS := -O2 -W -Wall -s -DUSE_OPENSSL -g
+CFLAGS := -O0 -W -Wall -DUSE_OPENSSL -g
 LDLIBS := -lusb-1.0  -lssl -lcrypto
 
 #CFLAGS := -DUSE_GCRYPT

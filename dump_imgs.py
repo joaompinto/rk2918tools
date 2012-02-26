@@ -16,7 +16,7 @@ if exists(target_dir) and not isdir(target_dir):
 if not exists(target_dir):
 	os.makedirs(target_dir)
 
-for part_name in ('misc','kernel','boot','recovery', 'system'):
+for part_name in ('misc','kernel','boot','recovery', 'system', 'backup'):
 	rc = os.system('./img-manager.py dump %s %s.img' \
 		% (part_name, join(target_dir, part_name)))
 	if rc <> 0:

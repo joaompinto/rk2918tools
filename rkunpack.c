@@ -74,7 +74,7 @@ unpack_krnl(const char *path, uint8_t *buf, uint32_t size)
 static void
 unpack_rkaf(const char *path, uint8_t *buf, uint32_t size)
 {
-	uint32_t fsize, ioff, isize, noff, nsize;
+	uint32_t fsize, ioff, isize, noff, nsize, h;
 	uint8_t *p;
 	int count;
 	const char *name, *fpath, *sep;
@@ -91,12 +91,13 @@ unpack_rkaf(const char *path, uint8_t *buf, uint32_t size)
 	printf("MACHINE_ID:%s\n", &buf[0x2a]);
 	printf("MANUFACTURER:%s\n", &buf[0x48]);
 
-	count = buf[0x88] | buf[0x89] << 8 | buf[0x8a] << 16 | buf[0x8b] << 24;
+	h = 0x89;
+	count = buf[h] | buf[h+1] << 8 | buf[h+2] << 16 | buf[h+3] << 24;
 
 	printf("\nunpacking %d files\n", count);
 	printf("-------------------------------------------------------------------------------\n");
 
-	for (p = &buf[0x8c]; count > 0; p += 0x70, count--) {
+	for (p = &buf[h+4]; count > 0; p += 0x70, count--) {
 		name = (const char *)p;
 		fpath = (const char *)&p[0x20];
 		nsize = p[0x5c] | p[0x5d] << 8 | p[0x5e] << 16 | p[0x5f] << 24;
